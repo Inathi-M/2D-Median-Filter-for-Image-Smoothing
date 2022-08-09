@@ -1,91 +1,110 @@
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Scanner;
+
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
+import java.awt.Color;
 
 public class MedianFilterSerial {
-    private static int[] pixels;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
+        Scanner input = new Scanner(System.in);
 
-        BufferedImage bImage = null;
-        File imageFile = null;
-        int buff[];
-        int maskSize = 9;
+        System.out.println("Please enter command-line parameters (in that order): \n<inputImageName> <outputImageName> <windowWidth>\n");
 
-        //read image
+        String inputString = input.nextLine(); input.close();
+        String[] arrInput = inputString.split(" ");
+
+        int squareSize = 0;
+
         try {
-            imageFile = new File("C:\\UCT\\CSC2002S\\Assignments\\Assignment 1\\EiffelTower.jpg");
-            bImage = ImageIO.read(imageFile);
-        } catch (IOException e) {
-            System.out.println(e);
+            if (Integer.parseInt(arrInput[2])%2 == 0 || Integer.parseInt(arrInput[2]) < 3){
+                System.out.println("\nIncorrect window size entered.\nProgramme ended.");
+                System.exit(0);
+            }
+
+            squareSize = Integer.parseInt(arrInput[2]);
+
+        } catch (NumberFormatException e) {
+            System.out.println("\nDid not enter a number.\nProgramme ended.");
+            System.exit(0);
         }
 
-        pixels = new int[bImage.getWidth() * bImage.getHeight()];
+        BufferedImage bImage;
+        double startTime;
 
+        try {
+            bImage = ImageIO.read(new File(arrInput[0]+".jpg"));
 
-        //image dimension
-        int width = bImage.getWidth();
-        int height = bImage.getHeight();
+            int height = bImage.getHeight();
+            int width = bImage.getWidth();
 
-        int outputPixels[] = new int[width * height];
+            BufferedImage finalImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
+            //Smoothing the image with sliding window approach
+            startTime = System.currentTimeMillis();
+            for (int y = 0; y<height-squareSize; y++){
 
-        /**
-         * red, green and blue are a 2D square of odd size like 3x3, 5x5, 7x7, ...
-         * For simplicity storing it into 1D array.
-         */
-        int red[], green[], blue[];
+                int[] pix = new int[squareSize * squareSize];
+                int[] B = new int[squareSize * squareSize];
+                int[] R = new int[squareSize * squareSize];
+                int[] G = new int[squareSize * squareSize];
 
-        /** Median Filter operation */
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int alpha = (pixels[x + (y * width)] >> 24) & 0xFF;
-                red = new int[maskSize * maskSize];
-                green = new int[maskSize * maskSize];
-                blue = new int[maskSize * maskSize];
-                int count = 0;
-                for (int r = y - (maskSize / 2); r <= y + (maskSize / 2); r++) {
-                    for (int c = x - (maskSize / 2); c <= x + (maskSize / 2); c++) {
-                        if (r < 0 || r >= height || c < 0 || c >= width) {
-                            /** Some portion of the mask is outside the image. */
-                            continue;
-                        } else {
-                            red[count] = (pixels[c + (r * width)] >> 16) & 0xFF;
-                            green[count] = (pixels[c + (r * width)] >> 8) & 0xFF;
-                            blue[count] = pixels[c + (r * width)] & 0xFF;
-                            count++;
+                for (int x = 0; x<width- squareSize; x++){
+
+                    int avgB = 0;
+                    int avgR = 0;
+                    int avgG = 0;
+
+                    for (int a=0; a< squareSize; a++){
+
+                        for (int n=0; n< squareSize; n++){
+                            Color color = new Color(bImage.getRGB( x+n, y+a));
+
+                            int blue = color.getBlue();
+                            B[a+n] = blue;
+                            avgB = avgB + blue;
+
+                            int red = color.getRed();
+                            R[a+n] = red;
+                            avgR = avgR + red;
+
+                            int green = color.getGreen();
+                            G[a+n] = green;
+                            avgG = avgG + green;
                         }
+
                     }
+
+                    //Sort Arrays
+                    Arrays.sort(B);
+                    Arrays.sort(R);
+                    Arrays.sort(G);
+
+                    int setB = B[(int) Math.ceil(B.length / squareSize)];
+                    int setR = R[(int) Math.ceil(R.length / squareSize)];
+                    int setG = G[(int) Math.ceil(G.length / squareSize)];
+
+                    Color RGB = new Color(setR, setG, setB);
+
+                    finalImage.setRGB(x, y, RGB.getRGB());
                 }
 
-                /** sort red, green, blue array */
-                java.util.Arrays.sort(red);
-                java.util.Arrays.sort(green);
-                java.util.Arrays.sort(blue);
-
-                /** save median value in outputPixels array */
-                int index = (count % 2 == 0) ? count / 2 - 1 : count / 2;
-                int p = (alpha << 24) | (red[index] << 16) | (green[index] << 8) | blue[index];
-                outputPixels[x + y * width] = p;
             }
+            double endTime = System.currentTimeMillis();
+
+            double exeTime =  endTime - startTime;
+            System.out.println("\nTime taken = " + exeTime);
+            ImageIO.write(finalImage, "jpeg", new File(arrInput[1]+".jpg"));
+
+        } catch (IIOException e) {
+            System.out.println("\nIncorrect input Image name entered.\nProgramme ended.");
+            System.exit(0);
         }
 
-        /** Write the output pixels to the image pixels */
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pixels[x + (y * width)] = outputPixels[x + y * width];
-                bImage.setRGB(x, y, pixels[x + (y * width)]);
-            }
-        }
-
-        //  }
-        //write image
-        try {
-            imageFile = new File("Output.jpg");
-            ImageIO.write(bImage, "jpg", imageFile);
-        } catch (IOException e) {
-            System.out.println(e);
-        }
     }
+
 }
