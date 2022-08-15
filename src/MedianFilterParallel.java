@@ -10,6 +10,8 @@ import java.awt.Color;
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 
+
+
 public class MedianFilterParallel {
 
     public static void main(String args[]) throws IOException {
@@ -41,7 +43,7 @@ public class MedianFilterParallel {
             inImg = ImageIO.read(new File(lineParaArr[0]+".jpg"));
             BufferedImage outImg = new BufferedImage(inImg.getWidth(), inImg.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-            Window window = new Window(inImg.getHeight(), inImg.getWidth(), winSize, inImg, outImg, 0, winSize, -1, inImg.getWidth());
+            Window2 window = new Window2(inImg.getHeight(), inImg.getWidth(), winSize, inImg, outImg, 0, winSize, -1, inImg.getWidth());
 
             //new ForkJoinPool();
             ForkJoinPool pool = ForkJoinPool.commonPool();
@@ -74,30 +76,34 @@ class Window2 extends RecursiveAction{
 
     protected int height;
     protected int width;
-    protected int winSize;
-    protected int startH;
-    protected int endH;
-    protected int startW;
-    protected int endW;
-    protected BufferedImage outImg;
-    protected BufferedImage inImg;
+    protected int squareSize;
+
+    protected int startHeight;
+
+    protected int endHeight;
+
+    protected int startWidth;
+
+    protected int endWidth;
+    protected BufferedImage bImage;
+    protected BufferedImage finalImage;
 
     int hx= 100000;
 
     protected int thresholdH=0;
     protected int thresholdW=0;
 
-    public Window2(int height, int width, int winSize, BufferedImage inImg ,BufferedImage outImg, int startH, int endH, int startW, int endW){
+    public Window2(int height, int width, int sqrSize, BufferedImage image ,BufferedImage finalImage, int startH, int endH, int startW, int endW){
 
         this.height=height;
         this.width=width;
-        this.winSize=winSize;
-        this.outImg=outImg;
-        this.inImg=inImg;
-        this.startH=startH;
-        this.endH=endH;
-        this.startW=startW;
-        this.endW=endW;
+        this.squareSize=sqrSize;
+        this.finalImage=finalImage;
+        this.bImage=image;
+        this.startHeight=startH;
+        this.endHeight=endH;
+        this.startWidth=startW;
+        this.endWidth=endW;
     }
 
     @Override
@@ -108,23 +114,23 @@ class Window2 extends RecursiveAction{
         int midpoint = (int) Math.ceil(height/2);
         int midWe = (int) Math.ceil(height/2);
 
-        int kn = (int) Math.floor((height)/winSize) +startH;
-        int kn1 = (int) Math.floor((width)/winSize) +endW;
+        int kn = (int) Math.floor((height)/squareSize) +startHeight;
+        int kn1 = (int) Math.floor((width)/squareSize) +endWidth;
         hx=height-kn;
 
-        if( startW!=-1){
+        if( startWidth!=-1){
 
             Smooth();
             System.out.println(midpoint+" "+height);
         }
         else{
 
-            endH=kn+endH;
+            endHeight=kn+ endHeight;
             //   startH=startH+kn;
 
-            startW=0;
-            Window winLeft = new Window(height, width, winSize, inImg, outImg, 0, midpoint, startW, width);
-            Window winRight = new Window(height, width, winSize, inImg, outImg, midpoint, height-winSize, startW, endW);
+            startWidth=0;
+            WindowSquare winLeft = new WindowSquare(height, width, squareSize, bImage, finalImage, 0, midpoint, startWidth, width);
+            WindowSquare winRight = new WindowSquare(height, width, squareSize, bImage, finalImage, midpoint, height-squareSize, startWidth, endWidth);
             invokeAll(winLeft, winRight);
         }
 
@@ -134,77 +140,118 @@ class Window2 extends RecursiveAction{
     public void Smooth(){
 
         int midpoint = (int) Math.ceil(height/2);
-        int kn = (int) Math.floor((height)/winSize) +startH;
+        int kn = (int) Math.floor((height)/squareSize) +startHeight;
 
         //Smoothing the image with sliding window approach
-        for (int i = startH; i<endH; i++){
+        for (int i = startHeight; i<endHeight; i++){
 
-            int[] pix = new int[winSize*winSize];
-            int[] pixB = new int[winSize*winSize];
-            int[] pixR = new int[winSize*winSize];
-            int[] pixG = new int[winSize*winSize];
-
-            for (int j = 0; j<width-winSize; j++){
-
-                int avg = 0;
-                int avgB = 0;
-                int avgR = 0;
-                int avgG = 0;
-
-                for (int k=0; k<winSize; k++){
-
-                    for (int n=0; n<winSize; n++){
-
-                        // int pixel = inImg.getRGB(i+k, j+n);
-
-                        //avg = avg + pixel;
-                        //pix[k+n] = pixel;
-                        //  System.out.println(i +" + "+k +" + "+n);
-
-                        // Color color = new Color(inImg.getRGB(i+k, j+n));
-                        Color color = new Color(inImg.getRGB( j+n, i+k));
+            int[] pix = new int[squareSize*squareSize];
+            int[] pixB = new int[squareSize*squareSize];
+            int[] pixR = new int[squareSize*squareSize];
+            int[] pixG = new int[squareSize*squareSize];
 
 
-                        int blue = color.getBlue();
-                        pixB[k+n] = blue;
-                        avgB = avgB + blue;
-                        int red = color.getRed();
-                        pixR[k+n] = red;
-                        avgR = avgR + red;
-                        int green = color.getGreen();
-                        pixG[k+n] = green;
-                        avgG = avgG + green;
+                for (int j = 0; j<bImage.getWidth(); j++){
+
+                    int avg = 0;
+                    int avgB = 0;
+                    int avgR = 0;
+                    int avgG = 0;
+
+                    if (j < bImage.getWidth()-squareSize){
+
+                        for (int k=0; k<squareSize; k++){
+
+                            for (int n=0; n<squareSize; n++){
+
+                                int pixel = bImage.getRGB( j+n, i+k);
+
+                                int alpha = (pixel>>24) & 0xff;
+                                pix[k+n]= alpha;
+                                avg = avg+ alpha;
+
+                                int blue = pixel & 0xff;
+                                pixB[k+n] = blue;
+                                avgB = avgB + blue;
+                                int red = (pixel>>16) & 0xff;
+                                pixR[k+n] = red;
+                                avgR = avgR + red;
+                                int green = (pixel>>8) & 0xff;
+                                pixG[k+n] = green;
+                                avgG = avgG + green;
+
+                            }
 
 
-                        //  inImg.getRaster().getPixel(x, y, iArray)
+                        }
 
                     }
 
+                    else{
+
+                        for (int k=0; k<squareSize; k++){
+
+                            for (int n=squareSize; n>0; n--){
+
+                                int pixel = bImage.getRGB( j-n, i+k);
+
+                                int alpha = (pixel>>24) & 0xff;
+                                pix[k+n]= alpha;
+                                avg = avg+ alpha;
+
+                                int blue = pixel & 0xff;
+                                pixB[k+n] = blue;
+                                avgB = avgB + blue;
+                                int red = (pixel>>16) & 0xff;
+                                pixR[k+n] = red;
+                                avgR = avgR + red;
+                                int green = (pixel>>8) & 0xff;
+                                pixG[k+n] = green;
+                                avgG = avgG + green;
+
+
+                            }
+
+
+                        }
+
+                    }
+
+                    //Sort Arrays
+                    Arrays.sort(pixB);
+                    Arrays.sort(pixR);
+                    Arrays.sort(pixG);
+                    Arrays.sort(pix);
+
+                    int posB = (int) Math.ceil(pixB.length / squareSize);
+                    int posR = (int) Math.ceil(pixR.length / squareSize);
+                    int posG = (int) Math.ceil(pixG.length / squareSize);
+                    int posAl = (int) Math.ceil(pix.length /squareSize);
+
+                    int setB = pixB[posB];
+                    int setR = pixR[posR];
+                    int setG = pixG[posG];
+                    int setAl = pix[posAl];
+
+                    int setColour = 0;
+
+                    setColour = setColour | (setAl<<24);
+                    setColour = setColour | (setR<<16);
+                    setColour = setColour | (setG<<8);
+                    setColour = setColour | setB;
+
+                    finalImage.setRGB(j, i, setColour);
 
                 }
-                // int setPix = avg/pix.length;
 
-                //Sort Arrays
-                Arrays.sort(pixB);
-                Arrays.sort(pixR);
-                Arrays.sort(pixG);
+            } // i end
 
-                int posB = (int) Math.ceil(pixB.length / winSize);
-                int posR = (int) Math.ceil(pixR.length / winSize);
-                int posG = (int) Math.ceil(pixG.length / winSize);
-
-                int setB = pixB[posB];
-                int setR = pixR[posR];
-                int setG = pixG[posG];
-                //    System.out.println("aveRGB = "+ avgR+","+avgB+","+avgG+","+ "  set ="+setR+","+setG+","+setB);
-                Color pixRGB = new Color(setR, setG, setB);
-
-                outImg.setRGB(j, i, pixRGB.getRGB());
             }
 
-        }
-
-    }
-
-
 }
+
+
+
+
+
+

@@ -9,6 +9,59 @@ import java.io.File;
 import java.awt.Color;
 
 public class MedianFilterSerial {
+
+    public static void SmoothFilter(int height, int width, BufferedImage image, BufferedImage finalImage, int squareSize) {
+
+        for (int y = 0; y < height - squareSize; y++) {
+
+            int[] A = new int[squareSize * squareSize];
+            int[] B = new int[squareSize * squareSize];
+            int[] R = new int[squareSize * squareSize];
+            int[] G = new int[squareSize * squareSize];
+
+            for (int x = 0; x < width - squareSize; x++) {
+
+                int avgB = 0;
+                int avgR = 0;
+                int avgG = 0;
+
+                for (int a = 0; a < squareSize; a++) {
+
+                    for (int n = 0; n < squareSize; n++) {
+                        Color color = new Color(image.getRGB(x + n, y + a));
+
+                        int blue = color.getBlue();
+                        B[a + n] = blue;
+                        avgB = avgB + blue;
+
+                        int red = color.getRed();
+                        R[a + n] = red;
+                        avgR = avgR + red;
+
+                        int green = color.getGreen();
+                        G[a + n] = green;
+                        avgG = avgG + green;
+                    }
+
+                }
+
+                //Sort Arrays
+                Arrays.sort(B);
+                Arrays.sort(R);
+                Arrays.sort(G);
+
+                int setB = B[(int) Math.ceil(B.length / squareSize)];
+                int setR = R[(int) Math.ceil(R.length / squareSize)];
+                int setG = G[(int) Math.ceil(G.length / squareSize)];
+
+                Color RGB = new Color(setR, setG, setB);
+
+                finalImage.setRGB(x, y, RGB.getRGB());
+            }
+
+        }
+    }
+
     public static void main(String[] args) throws IOException {
 
         Scanner input = new Scanner(System.in);
@@ -46,54 +99,8 @@ public class MedianFilterSerial {
 
             //Smoothing the image with sliding window approach
             startTime = System.currentTimeMillis();
-            for (int y = 0; y<height-squareSize; y++){
+          SmoothFilter(height,width,bImage,finalImage,squareSize);
 
-                int[] pix = new int[squareSize * squareSize];
-                int[] B = new int[squareSize * squareSize];
-                int[] R = new int[squareSize * squareSize];
-                int[] G = new int[squareSize * squareSize];
-
-                for (int x = 0; x<width- squareSize; x++){
-
-                    int avgB = 0;
-                    int avgR = 0;
-                    int avgG = 0;
-
-                    for (int a=0; a< squareSize; a++){
-
-                        for (int n=0; n< squareSize; n++){
-                            Color color = new Color(bImage.getRGB( x+n, y+a));
-
-                            int blue = color.getBlue();
-                            B[a+n] = blue;
-                            avgB = avgB + blue;
-
-                            int red = color.getRed();
-                            R[a+n] = red;
-                            avgR = avgR + red;
-
-                            int green = color.getGreen();
-                            G[a+n] = green;
-                            avgG = avgG + green;
-                        }
-
-                    }
-
-                    //Sort Arrays
-                    Arrays.sort(B);
-                    Arrays.sort(R);
-                    Arrays.sort(G);
-
-                    int setB = B[(int) Math.ceil(B.length / squareSize)];
-                    int setR = R[(int) Math.ceil(R.length / squareSize)];
-                    int setG = G[(int) Math.ceil(G.length / squareSize)];
-
-                    Color RGB = new Color(setR, setG, setB);
-
-                    finalImage.setRGB(x, y, RGB.getRGB());
-                }
-
-            }
             double endTime = System.currentTimeMillis();
 
             double exeTime =  endTime - startTime;
@@ -106,5 +113,4 @@ public class MedianFilterSerial {
         }
 
     }
-
 }

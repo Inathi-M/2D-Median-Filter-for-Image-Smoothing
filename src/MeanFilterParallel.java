@@ -17,31 +17,31 @@ public class MeanFilterParallel {
         Scanner input = new Scanner(System.in);
 
         System.out.println("Please enter command-line parameters (in that order): \n<inputImageName> <outputImageName> <windowWidth>\n");
-        String linePara = input.nextLine(); input.close();
-        String[] lineParaArr = linePara.split(" ");
+        String inputString = input.nextLine(); input.close();
+        String[] arrString = inputString.split(" ");
 
-        int winSize = 0;
+        int squareSize = 0;
 
         try {
-            if (Integer.parseInt(lineParaArr[2])%2 == 0 || Integer.parseInt(lineParaArr[2]) < 3){
+            if (Integer.parseInt(arrString[2])%2 == 0 || Integer.parseInt(arrString[2]) < 3){
                 System.out.println("\nIncorrect window size entered.\nProgramme ended.");
                 System.exit(0);
             }
 
-            winSize = Integer.parseInt(lineParaArr[2]);
+            squareSize = Integer.parseInt(arrString[2]);
         } catch (NumberFormatException e) {
             System.out.println("\nDid not enter a number.\nProgramme ended.");
             System.exit(0);
         }
 
-        BufferedImage inImg;
+        BufferedImage bImage;
         double startTime;
 
         try {
-            inImg = ImageIO.read(new File(lineParaArr[0]+".jpg"));
-            BufferedImage outImg = new BufferedImage(inImg.getWidth(), inImg.getHeight(), BufferedImage.TYPE_INT_RGB);
+            bImage = ImageIO.read(new File(arrString[0]+".jpg"));
+            BufferedImage finalImage = new BufferedImage(bImage.getWidth(), bImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-            Window window = new Window(inImg.getHeight(), inImg.getWidth(), winSize, inImg, outImg, 0, winSize, -1, inImg.getWidth());
+            WindowSquare window = new WindowSquare(bImage.getHeight(), bImage.getWidth(), squareSize, bImage, finalImage, 0, squareSize, -1, bImage.getWidth());
             //new ForkJoinPool();
             ForkJoinPool pool = ForkJoinPool.commonPool();
 
@@ -54,8 +54,7 @@ public class MeanFilterParallel {
 
 
             try {
-                // ImageIO.write(outImg, "jpeg", new File("C:/Users/dwebb/Desktop/UCT/CSC2002S/Assignments/ass1/Assignment working/test2.jpg"));
-                ImageIO.write(outImg, "jpeg", new File(lineParaArr[1]+".jpg"));
+                ImageIO.write(finalImage, "jpeg", new File(arrString[1]+".jpg"));
             } catch (IOException e) {
                 System.out.println("Image generation error");
             }
@@ -69,35 +68,33 @@ public class MeanFilterParallel {
 
 }
 
-class Window extends RecursiveAction{
+class WindowSquare extends RecursiveAction{
     protected int height;
     protected int width;
     protected int winSize;
-    protected int startH;
-    protected int endH;
-    protected int startW;
-    protected int endW;
-    protected BufferedImage outImg;
-    protected BufferedImage inImg;
+    protected int startHeight;
+    protected int endHeight;
+    protected int startWidth;
+    protected int endWidth;
+    protected BufferedImage bImage;
+    protected BufferedImage finalImage;
 
-    int hx= 100000;
+    int cutoff= 100000;
 
     protected int thresholdH=0;
     protected int thresholdW=0;
 
 
-    public Window(int height, int width, int winSize, BufferedImage inImg ,BufferedImage outImg, int startH, int endH, int startW, int endW){//, int start, int end){
+    public WindowSquare(int height, int width, int sqrSize, BufferedImage image ,BufferedImage finalImage, int startHeight, int endHeight, int startWidth, int endWidth){//, int start, int end){
         this.height=height;
         this.width=width;
-        this.winSize=winSize;
-        this.outImg=outImg;
-        this.inImg=inImg;
-        this.startH=startH;
-        this.endH=endH;
-        this.startW=startW;
-        this.endW=endW;
-        // this.start=start;
-        // this.end=end;
+        this.winSize=sqrSize;
+        this.finalImage=finalImage;
+        this.bImage=image;
+        this.startHeight=startHeight;
+        this.endHeight=endHeight;
+        this.startWidth=startWidth;
+        this.endWidth=endWidth;
     }
     // threshold window size
     @Override
@@ -107,102 +104,79 @@ class Window extends RecursiveAction{
         int midpoint = (int) Math.ceil(height/2);
         int midWe = (int) Math.ceil(height/2);
 
-        int kn = (int) Math.floor((height)/winSize) +startH;
-        int kn1 = (int) Math.floor((width)/winSize) +endW;
-        hx=height-kn;
+        int kn = (int) Math.floor((height)/winSize) +startHeight;
+        int kn1 = (int) Math.floor((width)/winSize) +endWidth;
+        cutoff=height-kn;
 
-        if( startW!=-1){
+        if( startWidth!=-1){
 
             Filter(kn-kn, kn, kn1-kn1, kn1);
             System.out.println(midpoint+" "+height);
         }
         else{
 
-            endH=kn+endH;
+            endHeight=kn+endHeight;
             //   startH=startH+kn;
 
-            startW=0;
-            Window winLeft = new Window(height, width, winSize, inImg, outImg, 0, midpoint, startW, width);
-            Window winRight = new Window(height, width, winSize, inImg, outImg, midpoint, height-winSize, startW, endW);
+            startWidth=0;
+            WindowSquare winLeft = new WindowSquare(height, width, winSize, bImage, finalImage, 0, midpoint, startWidth, width);
+            WindowSquare winRight = new WindowSquare(height, width, winSize, bImage, finalImage, midpoint, height-winSize, startWidth, endWidth);
             invokeAll(winLeft, winRight);
-            //winRight.fork();
-            // winLeft.compute();
-            //winRight.compute();
-            // winRight.join();
         }
 
-        /*
-        if (height < threshold){
-           Filter(start, end);
-        }
-        else{
-
-        int midpoint = (int) Math.ceil(height/2);
-        Window winLeft = new Window(height, width, winSize, inImg, outImg, 0, midpoint);
-        Window winRight = new Window(height, width, winSize, inImg, outImg, midpoint+1, height);
-
-        winLeft.fork();
-        winRight.compute();
-        winLeft.join();
-       }
-       */
     }
-
-
-
     public void Filter(int start, int end, int weSt, int weEn){
 
         int midpoint = (int) Math.ceil(height/2);
-        int kn = (int) Math.floor((height)/winSize) +startH;
+        int kn = (int) Math.floor((height)/winSize) +startHeight;
 
-        for (int i = startH; i<endH; i++){
+        for (int i = startHeight; i<endHeight; i++){
 
-            int[] pix = new int[winSize*winSize];
-            int[] pixB = new int[winSize*winSize];
-            int[] pixR = new int[winSize*winSize];
-            int[] pixG = new int[winSize*winSize];
+            int[] A = new int[winSize*winSize];
+            int[] B = new int[winSize*winSize];
+            int[] R = new int[winSize*winSize];
+            int[] G = new int[winSize*winSize];
 
             for (int j = 0; j<width-winSize; j++){
 
-                int avg = 0;
-                int avgB = 0;
-                int avgR = 0;
-                int avgG = 0;
+                int sumAlpha = 0;
+                int sumB = 0;
+                int sumR = 0;
+                int sumG = 0;
 
                 for (int k=0; k<winSize; k++){
 
                     for (int n=0; n<winSize; n++){
 
                         // Color color = new Color(inImg.getRGB(i+k, j+n));
-                        Color color = new Color(inImg.getRGB( j+n, i+k));
+                        Color color = new Color(bImage.getRGB( j+n, i+k));
 
                         int blue = color.getBlue();
-                        pixB[k+n] = blue;
-                        avgB = avgB + blue;
+                        B[k+n] = blue;
+                        sumB = sumB + blue;
                         int red = color.getRed();
-                        pixR[k+n] = red;
-                        avgR = avgR + red;
+                        R[k+n] = red;
+                        sumR = sumR + red;
                         int green = color.getGreen();
-                        pixG[k+n] = green;
-                        avgG = avgG + green;
+                        G[k+n] = green;
+                        sumG = sumG + green;
 
                     }
 
 
                 }
 
-                int setB = avgB/pixB.length;
-                int setR = avgR/pixR.length;
-                int setG = avgG/pixG.length;
+                int setB = sumB/B.length;
+                int setR = sumR/R.length;
+                int setG = sumG/G.length;
 
                 Color pixRGB = new Color(setR, setG, setB);
 
-                outImg.setRGB(j, i, pixRGB.getRGB());
+                finalImage.setRGB(j, i, pixRGB.getRGB());
             }
 
         }
 
     }
-
 
 }
