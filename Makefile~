@@ -29,5 +29,5 @@ runMeanSerial: $(CLASS_FILES)
 	java -cp $(BINDIR) MeanFilterSerial 
 
 runMeanParallel: $(CLASS_FILES)
-	java -cp $(BINDIR) MeanFilterParallel 
+	java -cp (BINDIR) MeanFilterParallel 
 	

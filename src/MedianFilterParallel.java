@@ -51,6 +51,7 @@ public class MedianFilterParallel {
             startTime = System.currentTimeMillis();
             pool.invoke(window);
 
+
             double endTime = System.currentTimeMillis();
 
             double exeTime =  endTime - startTime;
@@ -109,7 +110,7 @@ class Window2 extends RecursiveAction{
     @Override
     protected void compute() {
 
-        int threshold = 2;
+       // int threshold = 2;
 
         int midpoint = (int) Math.ceil(height/2);
         int midWe = (int) Math.ceil(height/2);
