@@ -116,7 +116,6 @@ class WindowSquare extends RecursiveAction{
         else{
 
             endHeight=kn+endHeight;
-            //   startH=startH+kn;
 
             startWidth=0;
             WindowSquare winLeft = new WindowSquare(height, width, winSize, bImage, finalImage, 0, midpoint, startWidth, width);

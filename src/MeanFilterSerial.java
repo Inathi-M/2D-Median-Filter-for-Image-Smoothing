@@ -10,28 +10,29 @@ import javax.imageio.ImageIO;
 public class MeanFilterSerial {
     /*
      *
-     * MUST REPLACE COLOR CLASS
+     * This application filters the mean of an image
      *
      */
     public static void MeanSmoothFilter(int height, int width, BufferedImage image, BufferedImage finalImage, int squareSize){
         /*Smoothing the image with sliding window approach*/
-        for (int y = 0; y<height; y++){ // Gets y coord of pixel from input image
+        for (int y = 0; y<height; y++){ // Gets y cord of pixel from input image
 
             int[] A = new int[squareSize*squareSize];
             int[] B = new int[squareSize*squareSize];
             int[] R = new int[squareSize*squareSize];
             int[] G = new int[squareSize*squareSize];
-
-            if (y < height-squareSize){ // To prevent loop crashing at height minus window size pixel
-
-                for (int x = 0; x<width; x++){  // Gets x coord of pixel from input image
+            // To prevent loop crashing at height minus window size pixel
+            if (y < height-squareSize){
+                // Gets x cord of pixel from input image
+                for (int x = 0; x<width; x++){
 
                     int sumG = 0;
                     int sumB = 0;
                     int sumR = 0;
                     int sumAlpha = 0;
 
-                    if (x < (width-squareSize)){ // To prevent loop crashing at width minus window size pixel
+                    // To prevent loop crashing at width minus window size pixel
+                    if (x < (width-squareSize)){
 
                         for (int a=0; a<squareSize; a++){ // y-axis of window
 

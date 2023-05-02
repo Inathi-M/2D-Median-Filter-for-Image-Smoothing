@@ -58,7 +58,6 @@ public class MedianFilterParallel {
             System.out.println("\nTime taken = " + exeTime);
 
             try {
-                // ImageIO.write(outImg, "jpeg", new File("C:/Users/dwebb/Desktop/UCT/CSC2002S/Assignments/ass1/Assignment working/test2.jpg"));
                 ImageIO.write(outImg, "jpeg", new File(lineParaArr[1]+".jpg"));
             } catch (IOException e) {
                 System.out.println("Image generation error");
@@ -110,8 +109,6 @@ class Window2 extends RecursiveAction{
     @Override
     protected void compute() {
 
-       // int threshold = 2;
-
         int midpoint = (int) Math.ceil(height/2);
         int midWe = (int) Math.ceil(height/2);
 
@@ -127,7 +124,6 @@ class Window2 extends RecursiveAction{
         else{
 
             endHeight=kn+ endHeight;
-            //   startH=startH+kn;
 
             startWidth=0;
             WindowSquare winLeft = new WindowSquare(height, width, squareSize, bImage, finalImage, 0, midpoint, startWidth, width);
@@ -245,7 +241,7 @@ class Window2 extends RecursiveAction{
 
                 }
 
-            } // i end
+            }
 
             }
 

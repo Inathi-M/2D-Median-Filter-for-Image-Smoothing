@@ -1,0 +1,35 @@
+commit ba72f430ff6eec1bdb9d8b614026ae6e71fd29de
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Tue Aug 16 16:47:18 2022 +0200
+
+    This version is the final version and everything is working well
+
+commit 77b6ffdf07d1a69023740d8d453b3ea27d94c39e
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Mon Aug 15 13:07:36 2022 +0200
+
+    Everything class is now running properly
+
+commit 5d1e527601cf288cbf95e483747fe06db275807d
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Fri Aug 12 22:41:05 2022 +0200
+
+    Made a few new changes
+
+commit 4092d9545abb7dc6b349fa975af150ad91eeb548
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Wed Aug 10 22:03:37 2022 +0200
+
+    Created the other files, MeanFilterParallel and MedianFilterParallel
+
+commit 11f10472fbb5fc2a29d7600bdb10a338e9a034da
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Tue Aug 9 23:33:02 2022 +0200
+
+    Added extra variables and time method for the MedianFilterSerial class
+
+commit 796e608b7e84bf87a766caf5b04d3bdfed8889c9
+Author: Inathi-M <tshaphilenkosnathi@gmail.com>
+Date:   Mon Aug 8 23:52:53 2022 +0200
+
+    This is the first version of the assignment, the first trial without changes
